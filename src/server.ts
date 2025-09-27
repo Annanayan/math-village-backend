@@ -557,7 +557,7 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
         content: "Sorry, I'm having trouble processing your request right now. Please try again later.",
         error: true
       });
->>>>>>> d1a90ac (update server.js for render deploy error)
+
     }
   
 
