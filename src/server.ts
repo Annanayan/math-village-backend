@@ -520,52 +520,44 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
     let content = "";
 
     try {
-      // ✅ Use OpenAI Responses API (supports gpt-5)
-      console.log('[AI] Using Responses API @ gpt-5');
 
-      const completion = await openai.responses.create({
-        model: process.env.OPENAI_MODEL || "gpt-5",
-        const input: InputMessage[] = [
+      // Use OpenAI Chat Completions API
+      const completion = await openai.chat.completions.create({
+        model: process.env.OPENAI_MODEL || "gpt-4",
+        messages: [
           {
             role: "system",
-            content:[
-              {
-                type: "text",
-                text: `You are an expert K12 Mathematics tutor. Your role is to:
-                        1. Give clear step-by-step explanations that are mathematically correct
-                        2. Use simple real-world examples when helpful
-                        3. Use LaTeX formatting for math: inline $x^2$ or block $$x^2$$
-                        4. Be encouraging and friendly
-                        5. Gently correct mistakes with proper reasoning
-                        6. ALWAYS perform actual verification by substituting values back into the original equation and show the calculations
+            content: `You are an expert K12 Mathematics tutor. Your role is to:
+              1. Give clear step-by-step explanations that are mathematically correct
+              2. Use simple real-world examples when helpful
+              3. Use LaTeX formatting for math: inline $x^2$ or block $$x^2$$
+              4. Be encouraging and friendly
+              5. Gently correct mistakes with proper reasoning
+              6. ALWAYS perform actual verification by substituting values back into the original equation and show the calculations
 
-                        IMPORTANT formatting rules:
-                        - Write step titles as: **Step 1: Description** (no extra formatting)
-                        - Use normal paragraph flow without excessive line breaks
-                        - Put math expressions inline with text when possible
-                        - Only use block math ($$...$$) for complex multi-line equations
-                        - Do NOT use markdown headers (###) or horizontal rules (---)
-                        - Do NOT use bullet points (- or *) for listing items in steps
-                        - Keep formatting simple and readable
-                        - In the verification step, you MUST substitute the solution back and show the actual calculation` 
-              }
-            ]
-            
+              IMPORTANT formatting rules:
+              - Write step titles as: **Step 1: Description** (no extra formatting)
+              - Use normal paragraph flow without excessive line breaks
+              - Put math expressions inline with text when possible
+              - Only use block math ($$...$$) for complex multi-line equations
+              - Do NOT use markdown headers (###) or horizontal rules (---)
+              - Do NOT use bullet points (- or *) for listing items in steps
+              - Keep formatting simple and readable
+              - In the verification step, you MUST substitute the solution back and show the actual calculation`
           },
-          ...messages.map(m => ({
-            role: m.role,
-            content: [{ type: "input_text", text: m.content }]
-          }))
-        ];
+          ...messages
+        ],
+        max_tokens: 1500,
+      });
 
-        // Fallback to Chat Completions API
-        const completion = await openai.responses.create({
-          model: process.env.OPENAI_MODEL || "gpt-5",
-          input,
-          max_tokens: 1500,
-        });
-  
-        const content = completion.output_text || "";
+      content = completion.choices[0].message.content || "";
+    } catch (error: any) {
+      console.error('[AI] API call failed:', error);
+      return res.status(500).json({
+        content: "Sorry, I'm having trouble processing your request right now. Please try again later.",
+        error: true
+      });
+>>>>>>> d1a90ac (update server.js for render deploy error)
     }
   
 
@@ -729,12 +721,12 @@ app.get('/user/learning-report', authenticateToken, (req: AuthRequest, res: expr
 
     // Generate recommendations
     const recommendations = [];
-    if (summary && summary.average_accuracy < 60) {
+    if (summary && (summary as any).average_accuracy < 60) {
       recommendations.push("Consider reviewing basic concepts before attempting harder problems");
     }
     if (bySubject.length > 0) {
-      const weakestSubject = bySubject[bySubject.length - 1];
-      if (weakestSubject.accuracy < 50) {
+      const weakestSubject = bySubject[bySubject.length - 1] as any;
+      if (weakestSubject && weakestSubject.accuracy < 50) {
         recommendations.push(`Focus more on ${weakestSubject.subject} to improve your overall performance`);
       }
     }
