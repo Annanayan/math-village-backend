@@ -3,6 +3,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import OpenAI from 'openai';
+import { InputMessage } from "openai/resources/beta/responses";
 import Database from 'better-sqlite3';
 import { config } from 'dotenv';
 import path from 'path';
@@ -524,10 +525,13 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
 
       const completion = await openai.responses.create({
         model: process.env.OPENAI_MODEL || "gpt-5",
-        input: [
+        const input: InputMessage[] = [
           {
-            role: "system" as const,
-            content:  `You are an expert K12 Mathematics tutor. Your role is to:
+            role: "system",
+            content:[
+              {
+                type: "text",
+                text: `You are an expert K12 Mathematics tutor. Your role is to:
                         1. Give clear step-by-step explanations that are mathematically correct
                         2. Use simple real-world examples when helpful
                         3. Use LaTeX formatting for math: inline $x^2$ or block $$x^2$$
@@ -544,53 +548,26 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
                         - Do NOT use bullet points (- or *) for listing items in steps
                         - Keep formatting simple and readable
                         - In the verification step, you MUST substitute the solution back and show the actual calculation` 
+              }
+            ]
             
           },
           ...messages.map(m => ({
             role: m.role,
             content: [{ type: "input_text", text: m.content }]
           }))
-        ],
-        max_output_tokens: 1500,
-      });
+        ];
 
-      // Responses API directly returns text
-      content = completion.output_text || "";
-
-    } catch (responseError: any) {
-      console.log('[AI] Responses API failed, falling back to Chat Completions API');
-
-      // Fallback to Chat Completions API
-      const completion = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert K12 Mathematics tutor. Your role is to:
-              1. Give clear step-by-step explanations that are mathematically correct
-              2. Use simple real-world examples when helpful
-              3. Use LaTeX formatting for math: inline $x^2$ or block $$x^2$$
-              4. Be encouraging and friendly
-              5. Gently correct mistakes with proper reasoning
-              6. ALWAYS perform actual verification by substituting values back into the original equation and show the calculations
-
-              IMPORTANT formatting rules:
-              - Write step titles as: **Step 1: Description** (no extra formatting)
-              - Use normal paragraph flow without excessive line breaks
-              - Put math expressions inline with text when possible
-              - Only use block math ($$...$$) for complex multi-line equations
-              - Do NOT use markdown headers (###) or horizontal rules (---)
-              - Do NOT use bullet points (- or *) for listing items in steps
-              - Keep formatting simple and readable
-              - In the verification step, you MUST substitute the solution back and show the actual calculation`
-          },
-          ...messages
-        ],
-        max_tokens: 1500,
-      });
-
-      content = completion.choices[0].message.content || "";
+        // Fallback to Chat Completions API
+        const completion = await openai.responses.create({
+          model: process.env.OPENAI_MODEL || "gpt-5",
+          input,
+          max_tokens: 1500,
+        });
+  
+        const content = completion.output_text || "";
     }
+  
 
     // Record AI conversation
     const insertConversation = db.prepare(`
