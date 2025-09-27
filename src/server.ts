@@ -3,7 +3,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import OpenAI from 'openai';
-import { InputMessage } from "openai/resources/beta/responses";
+
 import Database from 'better-sqlite3';
 import { config } from 'dotenv';
 import path from 'path';
