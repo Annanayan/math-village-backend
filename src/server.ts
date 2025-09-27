@@ -526,9 +526,8 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
         model: process.env.OPENAI_MODEL || "gpt-5",
         input: [
           {
-            role: "system",
-            content: [
-              { type: "input_text", text: `You are an expert K12 Mathematics tutor. Your role is to:
+            role: "system" as const,
+            content:  `You are an expert K12 Mathematics tutor. Your role is to:
                         1. Give clear step-by-step explanations that are mathematically correct
                         2. Use simple real-world examples when helpful
                         3. Use LaTeX formatting for math: inline $x^2$ or block $$x^2$$
@@ -544,8 +543,8 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
                         - Do NOT use markdown headers (###) or horizontal rules (---)
                         - Do NOT use bullet points (- or *) for listing items in steps
                         - Keep formatting simple and readable
-                        - In the verification step, you MUST substitute the solution back and show the actual calculation` }
-            ]
+                        - In the verification step, you MUST substitute the solution back and show the actual calculation` 
+            
           },
           ...messages.map(m => ({
             role: m.role,
