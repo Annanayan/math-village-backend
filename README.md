@@ -359,4 +359,3 @@ For questions, issues, or feature requests, please contact me or create an issue
 
 **Built with care for Math Village students and teachers** | Powered by OpenAI GPT-4
 
-**Built with care for Math Village students and teachers** | Powered by OpenAI GPT-4
