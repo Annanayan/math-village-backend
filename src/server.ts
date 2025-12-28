@@ -3,7 +3,6 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import OpenAI from 'openai';
-
 import Database from 'better-sqlite3';
 import { config } from 'dotenv';
 import path from 'path';
@@ -162,11 +161,16 @@ initializeDatabase();
 // Middleware
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman)
+    // Allow requests with no origin (like mobile apps, Postman, or file://)
     if (!origin) return callback(null, true);
 
     // Allow all localhost origins for development
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+
+    // Allow Render frontend deployments
+    if (origin.includes('onrender.com') || origin.includes('render.com')) {
       return callback(null, true);
     }
 
@@ -176,7 +180,9 @@ app.use(cors({
       return callback(null, true);
     }
 
-     return callback(null, false);
+    // In development, allow all origins (comment out in production)
+    console.log('⚠️  CORS: Allowing unknown origin:', origin);
+    return callback(null, true);
   },
   credentials: true
 }));
@@ -557,7 +563,6 @@ app.post('/ai/chat', authenticateToken, async (req: AuthRequest, res: express.Re
         content: "Sorry, I'm having trouble processing your request right now. Please try again later.",
         error: true
       });
-
     }
   
 
